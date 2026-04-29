@@ -2,5 +2,6 @@
 return[
     'BUNNY_API_KEY' => env('BUNNY_API_KEY'),
     'BUNNY_LIBRARY_EDUCACAO_DIGITAL_ID' => env('BUNNY_LIBRARY_EDUCACAO_DIGITAL_ID'),     
+    'BUNNY_BASE_URL' => env('BUNNY_BASE_URL'),
 ];
 ?>
