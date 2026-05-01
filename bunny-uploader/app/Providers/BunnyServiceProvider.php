@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\BunnyCollectionService;
+use App\Services\BunnyVideoService;
 use Illuminate\Support\ServiceProvider;
 
 class BunnyServiceProvider extends ServiceProvider
@@ -12,8 +13,16 @@ class BunnyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(BunnyServiceProvider::class, function ($app) {
+        $this->app->singleton(BunnyCollectionService::class, function ($app) {
             return new BunnyCollectionService([
+                'api_key' => config('bunny.api_key'),
+                'library_educacao_digital_id' => config('bunny.library_educacao_digital_id'),
+                'base_url' => config('bunny.base_url'),
+            ]);
+        });
+
+        $this->app->singleton(BunnyVideoService::class, function ($app) {
+            return new BunnyVideoService([
                 'api_key' => config('bunny.api_key'),
                 'library_educacao_digital_id' => config('bunny.library_educacao_digital_id'),
                 'base_url' => config('bunny.base_url'),

@@ -2,22 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Models\Video;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Collection extends Model
 {
-    use HasUuids;
-
-$fillable = ['bunny_id', 'name'];
-
-    /**
-     * The model's default values for attributes.
-     *
-     * @var array<string, mixed>
-     */
-    protected $attributes = [
-        'bunny_id' => '',
-        'name' => ''
-    ];
+    protected $fillable = ['bunny_id', 'name'];
+    public function videos(): HasMany
+    {
+        return $this->hasMany(Video::class);
+    }
 }

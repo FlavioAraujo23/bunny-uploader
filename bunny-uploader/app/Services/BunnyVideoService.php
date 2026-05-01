@@ -3,13 +3,14 @@
 namespace App\Services;
 
 use App\Models\Collection;
+use App\Models\Video;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
-class BunnyCollectionService
+class BunnyVideoService
 {
     private string $api_key;
     private string $library_educacao_digital_id;
@@ -29,37 +30,48 @@ class BunnyCollectionService
         $this->base_url = $config['base_url'];
     }
 
-    public function create(string $name): Collection
+    public function createVideo(string $title, string $collectionId): array
     {
 
         $response = Http::withHeaders([
             'AccessKey' => $this->api_key,
             'Content-Type' => 'application/json',
         ])->throw(function (Response $response, RequestException $e) {
-            Log::error('Something went wrong while create an collection.', [
+            Log::error('Something went wrong while create an video.', [
                 'response' => $response->getContent(),
                 'exception' => $e->getMessage()
             ]);
             return null;
         })->post($this->baseUrl(), [
-            'name' => $name,
+            'title' => $title,
+            'collectionId' => $collectionId,
+            'thumbnailTime' => 3000 // 3s em ms para gerar a thumb do video
         ]);
 
         $data = $response->json();
-        return Collection::create([
-            'name' => $data['name'],
-            'bunny_id' => $data['guid']
-        ]);
+
+        return $data;
     }
 
-    public function list()
+    public function uploadVideo(string $bunnyVideoId, string $fileContents): array
     {
-        return Collection::all();
+        $response = Http::withHeaders([
+            'AccessKey' => $this->api_key,
+            'Content-Type' => 'application/octet-stream',
+        ])->throw(function (Response $response, RequestException $e) {
+            Log::error('Something went wrong while create an video.', [
+                'response' => $response->getContent(),
+                'exception' => $e->getMessage()
+            ]);
+            return null;
+        })->put($this->baseUrl() . '/' . $bunnyVideoId, $fileContents);
+
+        $data = $response->json();
+        return $data;
     }
 
     private function baseUrl()
     {
-
-        return $this->base_url . "/library/" . $this->library_educacao_digital_id . "/collections";
+        return $this->base_url . "/library/" . $this->library_educacao_digital_id . "/videos";
     }
 }
