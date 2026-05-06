@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,3 +22,5 @@ Route::resource('videos', VideoController::class)->only([
     'store',
     'update'
 ]);
+
+Route::get('/export', [ExportController::class, 'index'])->name('export.index');

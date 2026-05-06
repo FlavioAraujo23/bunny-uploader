@@ -16,19 +16,18 @@ class BunnyCollectionService
     private string $base_url;
     public function __construct(private array $config)
     {
-        if (!isset(
-            $config['api_key'],
-            $config['library_educacao_digital_id'],
-            $config['base_url'],
-        )) {
+        if (
+            empty($config['api_key']) ||
+            empty($config['library_educacao_digital_id']) ||
+            empty($config['base_url'])
+        ) {
             throw new InvalidArgumentException('Missed options in config');
-        };
+        }
 
         $this->api_key = $config['api_key'];
         $this->library_educacao_digital_id = $config['library_educacao_digital_id'];
         $this->base_url = $config['base_url'];
     }
-
     public function create(string $name): Collection
     {
 
