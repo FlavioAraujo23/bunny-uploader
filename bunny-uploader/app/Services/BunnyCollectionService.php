@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Collection;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Http\Response;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -56,9 +56,23 @@ class BunnyCollectionService
         return Collection::all();
     }
 
+    public function listFromBunny(): array
+    {
+        $response = Http::withHeaders([
+            'AccessKey' => $this->api_key,
+        ])->throw(function (Response $response, RequestException $e) {
+            Log::error('Something went wrong while search collections on bunny.', [
+                'response' => $response->body(),
+                'exception' => $e->getMessage()
+            ]);
+            return null;
+        })->get($this->baseUrl(), ['page' => 1, 'itemsPerPage' => 100]);
+
+        return $response->json()['items'];
+    }
+
     private function baseUrl()
     {
-
         return $this->base_url . "/library/" . $this->library_educacao_digital_id . "/collections";
     }
 }

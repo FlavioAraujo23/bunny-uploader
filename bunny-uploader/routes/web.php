@@ -5,9 +5,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\VideoController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [CollectionController::class, 'home'])->name('collections.home');
 
 Route::resource('collections', CollectionController::class)->only([
     'index',
@@ -15,7 +13,7 @@ Route::resource('collections', CollectionController::class)->only([
     'store'
 ]);
 
-Route::post('/collections/{collection}', [CollectionController::class, 'select'])->name('collections.select');
+Route::post('/collections/select', [CollectionController::class, 'select'])->name('collections.select');
 
 Route::resource('videos', VideoController::class)->only([
     'index',
