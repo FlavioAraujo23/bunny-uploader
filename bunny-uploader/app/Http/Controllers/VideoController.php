@@ -6,6 +6,7 @@ use App\Jobs\ProcessVideoUpload;
 use App\Models\Video;
 use App\Services\BunnyVideoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VideoController extends Controller
 {
@@ -40,7 +41,7 @@ class VideoController extends Controller
                 'status' => Video::STATUS_PENDING,
                 'name' => $videoFile->getClientOriginalName()
             ]);
-            
+
             ProcessVideoUpload::dispatch($video, $tempPath, $activeCollection);
         }
 
@@ -51,5 +52,33 @@ class VideoController extends Controller
     {
         $video->update(['name' => $request->input('name')]);
         return redirect()->route('videos.index')->with('success', 'O nome do video foi atualizado com sucesso!');
+    }
+
+    public function authorize(Request $request)
+    {
+        try {
+            $activeCollection = session('active_collection');
+
+            $collection = \App\Models\Collection::findOrFail($activeCollection);
+
+            $video = $this->service->createVideo($request->name, $collection->bunny_id);
+            Log::info('video criado', $video);
+
+            Video::create([
+                'collection_id' => $activeCollection,
+                'status' => Video::STATUS_PENDING,
+                'name' => $request->name
+            ]);
+            Log::info('salvo no banco, gerando tus credentials');
+            $tusCredentials = $this->service->generateTusCredentials($video['guid']);
+            Log::info('tus credentials geradas', $tusCredentials);
+            return response()->json($tusCredentials);
+        } catch (\Throwable $e) {
+            Log::error('Erro no authorize: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -2,10 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Collection;
-use App\Models\Video;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Http\Response;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -17,6 +15,7 @@ class BunnyVideoService
     private string $base_url;
     public function __construct(private array $config)
     {
+        Log::info('BunnyVideoService config recebido', $config);
         if (!isset(
             $config['api_key'],
             $config['library_educacao_digital_id'],
@@ -38,7 +37,7 @@ class BunnyVideoService
             'Content-Type' => 'application/json',
         ])->throw(function (Response $response, RequestException $e) {
             Log::error('Something went wrong while create an video.', [
-                'response' => $response->getContent(),
+                'response' => $response->body(),
                 'exception' => $e->getMessage()
             ]);
             return null;
@@ -53,21 +52,25 @@ class BunnyVideoService
         return $data;
     }
 
-    public function uploadVideo(string $bunnyVideoId, string $fileContents): array
+    public function generateTusCredentials(string $bunnyVideoId): array
     {
-        $response = Http::withHeaders([
-            'AccessKey' => $this->api_key,
-            'Content-Type' => 'application/octet-stream',
-        ])->throw(function (Response $response, RequestException $e) {
-            Log::error('Something went wrong while create an video.', [
-                'response' => $response->getContent(),
-                'exception' => $e->getMessage()
-            ]);
-            return null;
-        })->put($this->baseUrl() . '/' . $bunnyVideoId, $fileContents);
+        $expirationTime = time() + 86400;
+        $signature = $this->generateSignature($bunnyVideoId, $expirationTime);
+        return [
+            'videoId' => $bunnyVideoId,
+            'libraryId' => (int) $this->library_educacao_digital_id,
+            'expirationTime' => $expirationTime,
+            'signature' => $signature,
+        ];
+    }
 
-        $data = $response->json();
-        return $data;
+    private function generateSignature(string $bunnyVideoId, int $expirationTime)
+    {
+        $concatValue = $this->library_educacao_digital_id . $this->api_key . $expirationTime . $bunnyVideoId;
+
+        $signature = hash('sha256', $concatValue);
+
+        return $signature;
     }
 
     private function baseUrl()

@@ -23,4 +23,6 @@ Route::resource('videos', VideoController::class)->only([
     'update'
 ]);
 
+Route::post('/videos/authorize', [VideoController::class, 'authorize'])->name('videos.authorize');
+
 Route::get('/export', [ExportController::class, 'index'])->name('export.index');

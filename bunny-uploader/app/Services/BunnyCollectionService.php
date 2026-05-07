@@ -36,7 +36,7 @@ class BunnyCollectionService
             'Content-Type' => 'application/json',
         ])->throw(function (Response $response, RequestException $e) {
             Log::error('Something went wrong while create an collection.', [
-                'response' => $response->getContent(),
+                'response' => $response->body(),
                 'exception' => $e->getMessage()
             ]);
             return null;
