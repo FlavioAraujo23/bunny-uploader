@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CollectionNotFoundException;
 use App\Jobs\ProcessVideoUpload;
 use App\Models\Video;
 use App\Services\BunnyVideoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Collection;
 
 class VideoController extends Controller
 {
@@ -56,29 +58,26 @@ class VideoController extends Controller
 
     public function authorize(Request $request)
     {
-        try {
-            $activeCollection = session('active_collection');
-
-            $collection = \App\Models\Collection::findOrFail($activeCollection);
-
-            $video = $this->service->createVideo($request->name, $collection->bunny_id);
-            Log::info('video criado', $video);
-
-            Video::create([
-                'collection_id' => $activeCollection,
-                'status' => Video::STATUS_PENDING,
-                'name' => $request->name
-            ]);
-            Log::info('salvo no banco, gerando tus credentials');
-            $tusCredentials = $this->service->generateTusCredentials($video['guid']);
-            Log::info('tus credentials geradas', $tusCredentials);
-            return response()->json($tusCredentials);
-        } catch (\Throwable $e) {
-            Log::error('Erro no authorize: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return response()->json(['error' => $e->getMessage()], 500);
+        $activeCollection = session('active_collection');
+        if (!$activeCollection) {
+            throw new CollectionNotFoundException();
         }
+        $collection = Collection::find($activeCollection);
+        if (!$collection) {
+            throw new CollectionNotFoundException('Collection ativa não encontrad no banco');
+        }
+
+        $video = $this->service->createVideo($request->name, $collection->bunny_id);
+        Log::info('video criado', $video);
+
+        Video::create([
+            'collection_id' => $activeCollection,
+            'status' => Video::STATUS_PENDING,
+            'name' => $request->name
+        ]);
+        Log::info('salvo no banco, gerando tus credentials');
+        $tusCredentials = $this->service->generateTusCredentials($video['guid']);
+        Log::info('tus credentials geradas', $tusCredentials);
+        return response()->json($tusCredentials);
     }
 }

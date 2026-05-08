@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\VideoUploadException;
 use App\Models\Video;
 use App\Services\BunnyVideoService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,6 +33,9 @@ class ProcessVideoUpload implements ShouldQueue
         $this->video->update(['status' => Video::STATUS_PROCESSING]);
 
         $content = file_get_contents($this->tempPath);
+        if ($content === false) {
+            throw new VideoUploadException('Arquivo temporário não encontrado ' . $this->tempPath);
+        }
 
         $data = $service->createVideo($this->video->name, $this->collection_id);
         $service->uploadVideo($data['guid'], $content);
@@ -46,8 +50,18 @@ class ProcessVideoUpload implements ShouldQueue
     public function failed(?Throwable $exception): void
     {
         $this->video->update(['status' => Video::STATUS_FAILED]);
-        Log::error('Something went wrong while process an video.', [
-            'exception' => $exception->getMessage()
+
+        if ($exception instanceof VideoUploadException) {
+            Log::channel('bunny')->error('Video upload falhou', [
+                'video_id' => $this->video->id,
+                'exception' => $exception->getMessage()
+            ]);
+            return;
+        }
+
+        Log::error('Erro inesperado no upload de video.', [
+            'video_id' => $this->video->id,
+            'exception' => $exception?->getMessage()
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BunnyApiException;
 use App\Models\Collection;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
@@ -39,7 +40,7 @@ class BunnyCollectionService
                 'response' => $response->body(),
                 'exception' => $e->getMessage()
             ]);
-            return null;
+            throw BunnyApiException::fromResponse($this->baseUrl(), $response->status(), $response->body());
         })->post($this->baseUrl(), [
             'name' => $name,
         ]);
@@ -65,7 +66,7 @@ class BunnyCollectionService
                 'response' => $response->body(),
                 'exception' => $e->getMessage()
             ]);
-            return null;
+            throw BunnyApiException::fromResponse($this->baseUrl(), $response->status(), $response->body());
         })->get($this->baseUrl(), ['page' => 1, 'itemsPerPage' => 100]);
 
         return $response->json()['items'];

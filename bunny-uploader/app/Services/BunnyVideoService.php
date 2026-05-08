@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BunnyApiException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -40,7 +41,7 @@ class BunnyVideoService
                 'response' => $response->body(),
                 'exception' => $e->getMessage()
             ]);
-            return null;
+            throw BunnyApiException::fromResponse($this->baseUrl(), $response->status(), $response->body());
         })->post($this->baseUrl(), [
             'title' => $title,
             'collectionId' => $collectionId,

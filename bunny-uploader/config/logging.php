@@ -126,6 +126,13 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+        'bunny' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/bunny.log'),
+            'level' => 'error',
+            'days' => 5,
+            'replace_placeholders' => true
+        ]
 
     ],
 
